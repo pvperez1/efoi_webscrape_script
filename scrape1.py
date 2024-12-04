@@ -2,27 +2,32 @@ from bs4 import BeautifulSoup
 import requests
 import csv
 import time
+import urllib3
 
+# Introducing myself and getting the website
+url = input("Type in URL:")
+header = {"User-Agent": "Paul Jason Perez (pvperez1@uw.edu)"}
+request = urllib3.request(url, None, header)
+response = urllib3.urlopen(request)
+soup = BeautifulSoup(response.read())
 
 #Create CSV file
-csv_file = open('foi_scrape11062019_Denied.csv','w')
+csv_file = open('foi_scrape11272024-2.csv','w')
 csv_writer = csv.writer(csv_file)
-csv_writer.writerow(['Title','Agency','Requestor','Purpose','Coverage','Req ID','Status','Date Requested','Request Link'])
-#Get website
-url = input("Type in URL:")
-source = requests.get(url).text
-#with open('test.html') as source:
-soup = BeautifulSoup(source,'lxml')
+csv_writer.writerow(['Title','Agency','Initial','Purpose','Coverage','Req ID','Status','Date Requested','Request Link'])
 
+
+#get the total number of records as displayed from the website
 no_of_rec_h = soup.find('header', class_='section-subheader')
-spans_in_h = no_of_rec_h.find_all('span')
-no_of_recs = int(spans_in_h[0].text)
-no_of_pages = no_of_recs // 50
+spans_in_h = no_of_rec_h.find_all('b') 
+no_of_recs = int(spans_in_h[1].text) #second span contains total number of records
+no_of_pages = no_of_recs // 15 #because there are 15 records per page
 
 
 #Get all record in first page
 records = soup.find_all('div',class_='component-panel')
 
+next_page = 11540
 try:
     #then do the loop
     while no_of_pages > 0:
@@ -32,24 +37,21 @@ try:
             rec_title = record.h4.a.text.strip()
             rec_description = record.find_all('span')
             rec_agency = rec_description[0].text
-            rec_requestor = rec_description[1].text
-            rec_purpose = rec_description[2].text
-            rec_coverage = rec_description[3].text
+            rec_agency_initial = rec_description[1].text
+            rec_purpose = rec_description[3].text
             rec_tracking = rec_description[4].text
             rec_status = record.label.text.strip()
             rec_request_date = record.p['title']
             rec_link = 'https://www.foi.gov.ph' + record.h4.a['href']
             #write to CSV file
-            csv_writer.writerow([rec_title, rec_agency, rec_requestor, rec_purpose, rec_coverage, rec_tracking, rec_status, rec_request_date, rec_link])
+            csv_writer.writerow([rec_title, rec_agency, rec_agency_initial, rec_requestor,rec_purpose, rec_tracking, rec_status, rec_request_date, rec_link])
             #end of for loop
-        #continuing the while loop    
-        tab_pane = soup.find('div',class_='col-xxs-12 col-xs-12 col-sm-8')
-        links = tab_pane.find_all('a')
-        for link in links:pass
-        next_link = 'https://www.foi.gov.ph' + link['href']
+        #continuing the while loop
+        next_link = 'https://www.foi.gov.ph/requests/page/' + str(next_page) + '/'
+        next_page += 1
         print(next_link)
         print(no_of_pages)
-        no_of_pages = no_of_pages - 1
+        no_of_pages -= 1
         time.sleep(0.1)
         url = next_link
         source = requests.get(url).text
