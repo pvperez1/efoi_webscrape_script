@@ -44,7 +44,7 @@ try:
             rec_request_date = record.p['title']
             rec_link = 'https://www.foi.gov.ph' + record.h4.a['href']
             #write to CSV file
-            csv_writer.writerow([rec_title, rec_agency, rec_agency_initial, rec_requestor,rec_purpose, rec_tracking, rec_status, rec_request_date, rec_link])
+            csv_writer.writerow([rec_title, rec_agency, rec_agency_initial,rec_purpose, rec_tracking, rec_status, rec_request_date, rec_link])
             #end of for loop
         #continuing the while loop
         next_link = 'https://www.foi.gov.ph/requests/page/' + str(next_page) + '/'
